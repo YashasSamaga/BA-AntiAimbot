@@ -16,11 +16,11 @@
 //Slice for the information regarding Maximum Weapon Firing Range
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Callbacks:
-//	OnPlayerSuspectedForAimbot(playerid,hitid,weaponid,warnings)
+//  OnPlayerSuspectedForAimbot(playerid,hitid,weaponid,warnings)
 //
 //Stocks:
-//	native BustAim::GetPlayerWeaponProfile(playerid,weaponid,&allshots,&hitshots,&max_cont_shots,&out_of_range_warns,&random_aim_warns,&proaim_tele_warns,&backward_shot_warns);
-//	native BustAim::ResetPlayerWeaponProfile(playerid,weaponid);
+//  native BustAim::GetPlayerWeaponProfile(playerid,weaponid,&allshots,&hitshots,&max_cont_shots,&out_of_range_warns,&random_aim_warns,&proaim_tele_warns,&backward_shot_warns);
+//  native BustAim::ResetPlayerWeaponProfile(playerid,weaponid);
 //  native BustAim::GetPlayerProfile(playerid,&shotsfired,&shotshit,&max_cont_shots,&out_of_range_warns,&random_aim_warns,&proaim_tele_warns,&backward_shot_warns);
 //  native BustAim::ResetPlayerProfile(playerid);
 //  native BustAim::SetPlayerFlags(playerid,flags);
