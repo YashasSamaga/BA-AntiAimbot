@@ -143,7 +143,7 @@ static BustAim_g_OPWS_pointer = -1;
 static BustAim_g_OPSFA_pointer = -1;
 static BustAim_g_OPC_pointer = -1;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static Float:DistanceCameraTargetToLocation(Float:CamX, Float:CamY, Float:CamZ, Float:ObjX, Float:ObjY, Float:ObjZ, Float:FrX, Float:FrY, Float:FrZ)
+static Float:internal_BS_DCTTL(Float:CamX, Float:CamY, Float:CamZ, Float:ObjX, Float:ObjY, Float:ObjZ, Float:FrX, Float:FrY, Float:FrZ)
 {
    	static Float:TGTDistance,Float:tmpX, Float:tmpY, Float:tmpZ;
     TGTDistance = floatsqroot((CamX - ObjX) * (CamX - ObjX) + (CamY - ObjY) * (CamY - ObjY) + (CamZ - ObjZ) * (CamZ - ObjZ));
@@ -154,7 +154,7 @@ static Float:DistanceCameraTargetToLocation(Float:CamX, Float:CamY, Float:CamZ, 
 
     return floatsqroot((tmpX - ObjX) * (tmpX - ObjX) + (tmpY - ObjY) * (tmpY - ObjY) + (tmpZ - ObjZ) * (tmpZ - ObjZ));
 }
-static Float:GetPointAngleToPoint(Float:x2, Float:y2, Float:X, Float:Y)
+static Float:internal_BS_GPATP(Float:x2, Float:y2, Float:X, Float:Y)
 {
   static Float:DX, Float:DY,Float:angle;
 
@@ -179,31 +179,31 @@ static Float:GetPointAngleToPoint(Float:x2, Float:y2, Float:X, Float:Y)
 
   return floatadd(angle, 90.0);
 }
-static GetXYInFrontOfPoint(&Float:x, &Float:y, Float:angle, Float:distance)
+static internal_BS_GXYIFOP(&Float:x, &Float:y, Float:angle, Float:distance)
 {
         x += (distance * floatsin(-angle, degrees));
         y += (distance * floatcos(-angle, degrees));
 }
-static IsCameraAimingAt(weaponid,Float:x, Float:y, Float:z,Float:vector_x,Float:vector_y,Float:vector_z,Float:camera_x,Float:camera_y,Float:camera_z,Float:radius)
+static internal_BS_IsCameraAimingAt(weaponid,Float:x, Float:y, Float:z,Float:vector_x,Float:vector_y,Float:vector_z,Float:camera_x,Float:camera_y,Float:camera_z,Float:radius)
 {
    	static Float:vertical, Float:horizontal;
     switch (weaponid)
     {
 		case 34,35,36:
 		{
-			if (DistanceCameraTargetToLocation(camera_x, camera_y, camera_z, x, y, z, vector_x, vector_y, vector_z) < radius) return true;
+			if (internal_BS_DCTTL(camera_x, camera_y, camera_z, x, y, z, vector_x, vector_y, vector_z) < radius) return true;
 			return false;
         }
         case 30,31: {vertical = 4.0; horizontal = -1.6;}
         case 33: {vertical = 2.7; horizontal = -1.0;}
         default: {vertical = 6.0; horizontal = -2.2;}
 	}
-	new Float:angle = GetPointAngleToPoint(0, 0, floatsqroot(vector_x*vector_x+vector_y*vector_y), vector_z) - 270.0;
+	new Float:angle = internal_BS_GPATP(0, 0, floatsqroot(vector_x*vector_x+vector_y*vector_y), vector_z) - 270.0;
 	new Float:resize_x, Float:resize_y, Float:resize_z = floatsin(angle+vertical, degrees);
      
-	GetXYInFrontOfPoint(resize_x, resize_y, GetPointAngleToPoint(0, 0, vector_x, vector_y)+horizontal, floatcos(angle+vertical, degrees));
+	internal_BS_GXYIFOP(resize_x, resize_y, internal_BS_GPATP(0, 0, vector_x, vector_y)+horizontal, floatcos(angle+vertical, degrees));
 
-	if (DistanceCameraTargetToLocation(camera_x, camera_y, camera_z, x, y, z, resize_x, resize_y, resize_z) < radius) return true;
+	if (internal_BS_DCTTL(camera_x, camera_y, camera_z, x, y, z, resize_x, resize_y, resize_z) < radius) return true;
 	return false;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -313,7 +313,7 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 
         if(BustAim_g_PlayerSettings{playerid} & CHECK_FOR_RANDOM_AIM_SHOTS)
 			if(S2V_dist > MIN_DIST_FOR_AIM_CHECKS)
-				if(!IsCameraAimingAt(weaponid,hX,hY,hZ,pX,pY,pZ,cX,cY,cZ,BUSTAIM_PLAYER_SPHERE_RADIUS))
+				if(!internal_BS_IsCameraAimingAt(weaponid,hX,hY,hZ,pX,pY,pZ,cX,cY,cZ,BUSTAIM_PLAYER_SPHERE_RADIUS))
 	                if(++BustAim_g_RandomAimShots{playerid} > BUSTAIM_RANDOM_AIM_PROBES)
 	                {
 	                    BustAim_g_RandomAimShots{playerid} = 0;
