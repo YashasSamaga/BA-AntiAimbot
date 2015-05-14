@@ -54,7 +54,12 @@ Changes from 1.1 R3 to 1.2:
 
 Credits
 Yashas
+
 RedShirt & niCe & JernejL for camera/aiming functions
+
 ipsLeon & Kyance for their aimbot detectors
+
 Pottus for constructive criticism
+
 Slice for the information regarding Maximum Weapon Firing Range 
+
