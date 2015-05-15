@@ -26,6 +26,9 @@
 //  native BustAim::SetPlayerFlags(playerid,flags);
 //  native BustAim::GetPlayerFlags(playerid,&flags);
 //  native BustAim::ResetPlayerFlags(playerid);
+//  native BustAim::GetTeleportStats(playerid,Float:arr[],sz = sizeof(arr));
+//  native BustAim::GetAimStats(playerid,Float:arr[],sz = sizeof(arr))
+//  native BustAim::GetRangeStats(playerid,Float:arr[],sz = sizeof(arr))
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if defined _INCLUDE_BUSTAIM_
 	#endinput
@@ -35,10 +38,10 @@
 #define BustAim:: BS_
 
 #if !defined BUSTAIM_MAX_PL_PERCENTAGE
-	#define BUSTAIM_MAX_PL_PERCENTAGE 1.5
+	#define BUSTAIM_MAX_PL_PERCENTAGE 2
 #endif
 #if !defined BUSTAIM_MAX_PING
-	#define BUSTAIM_MAX_PING 400
+	#define BUSTAIM_MAX_PING 350
 #endif
 #if !defined BUSTAIM_SKIP_WEAPON_IDS
 	#define BUSTAIM_SKIP_WEAPON_IDS 38
@@ -50,13 +53,13 @@
 	#define BUSTAIM_OUT_OF_RANGE_PROBES 5
 #endif
 #if !defined BUSTAIM_PROAIM_TELEPORT_PROBES
-	#define BUSTAIM_PROAIM_TELEPORT_PROBES 3
+	#define BUSTAIM_PROAIM_TELEPORT_PROBES 5
 #endif
 #if !defined BUSTAIM_BACKWARD_SHOTS_PROBES
 	#define BUSTAIM_BACKWARD_SHOTS_PROBES 3
 #endif
 #if !defined BUSTAIM_RANDOM_AIM_PROBES
-	#define BUSTAIM_RANDOM_AIM_PROBES 3
+	#define BUSTAIM_RANDOM_AIM_PROBES 5
 #endif
 #if !defined MIN_DIST_FOR_TELEPORT_CHECKS
 	#define MIN_DIST_FOR_TELEPORT_CHECKS 5
@@ -73,12 +76,17 @@
 #if !defined BUSTAIM_DEFAULT_PLAYER_FLAGS
 	#define BUSTAIM_DEFAULT_PLAYER_FLAGS (CHECK_FOR_OUT_OF_RANGE_SHOTS	|	CHECK_FOR_PROAIM_TELEPORT   |	CHECK_FOR_RANDOM_AIM_SHOTS	|	CHECK_FOR_BACKWARD_SHOTS | 	CHECK_FOR_CONTINOUS_SHOTS)
 #endif
+#if !defined BUSTAIM_WSTATS_SHOTS
+	#define BUSTAIM_WSTATS_SHOTS 3
+#endif
 
 //DO NOT CHANGE THIS
 #define BS_TOTAL_SHOOTING_WEAPONS 17 //includes RPG,HS,FT
 #if BS_TOTAL_SHOOTING_WEAPONS != 17
 	#error BS_TOTAL_SHOOTING_WEAPONS should always be set to 17
 #endif
+
+#define BS_GetNormalWeaponRange(weaponid) BustAim_g_WeaponRange[weaponid-22]
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 forward OnPlayerSuspectedForAimbot(playerid,hitid,weaponid,warnings);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +109,7 @@ enum (<<=1)
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Modified(increased M4,AK Ranges from 70,90 to 100,120) Slice's Max Weapon Ranges from Weapon Config Include
-static Float:BustAim_g_WeaponRange[] =
+new const Float:BustAim_g_WeaponRange[] =
 {
 	35.0, // 22 - Colt 45
 	35.0, // 23 - Silenced
@@ -131,6 +139,7 @@ static BustAim_g_TeleportShots[MAX_PLAYERS char];
 static BustAim_g_OutOfRangeShots[MAX_PLAYERS char];
 static BustAim_g_BackwardShot[MAX_PLAYERS char];
 
+#if !defined BUSTAIM_DISABLE_PROFILING
 static BustAim_g_TotalRandomAimWarns[MAX_PLAYERS][BS_TOTAL_SHOOTING_WEAPONS];
 static BustAim_g_TotalTeleportWarns[MAX_PLAYERS][BS_TOTAL_SHOOTING_WEAPONS];
 static BustAim_g_TotalBackwardWarns[MAX_PLAYERS][BS_TOTAL_SHOOTING_WEAPONS];
@@ -138,10 +147,14 @@ static BustAim_g_TotalOutOfRangeWarns[MAX_PLAYERS][BS_TOTAL_SHOOTING_WEAPONS];
 static BustAim_g_MaxContinousShots[MAX_PLAYERS][BS_TOTAL_SHOOTING_WEAPONS];
 static BustAim_g_ShotsFired[MAX_PLAYERS][BS_TOTAL_SHOOTING_WEAPONS];
 static BustAim_g_ShotsHit[MAX_PLAYERS][BS_TOTAL_SHOOTING_WEAPONS];
+#endif
 
-static BustAim_g_OPWS_pointer = -1;
-static BustAim_g_OPSFA_pointer = -1;
-static BustAim_g_OPC_pointer = -1;
+#if !defined BUSTAIM_DISABLE_WSTATS
+static Float:BustAim_g_TeleportWarningStats[MAX_PLAYERS][BUSTAIM_WSTATS_SHOTS];
+static Float:BustAim_g_AimWarningStats[MAX_PLAYERS][BUSTAIM_WSTATS_SHOTS];
+static Float:BustAim_g_RangeWarningStats[MAX_PLAYERS][BUSTAIM_WSTATS_SHOTS];
+static Float:BustAim_g_DCTTL_temp;
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static Float:internal_BS_DCTTL(Float:CamX, Float:CamY, Float:CamZ, Float:ObjX, Float:ObjY, Float:ObjZ, Float:FrX, Float:FrY, Float:FrZ)
 {
@@ -202,8 +215,11 @@ static internal_BS_IsCameraAimingAt(weaponid,Float:x, Float:y, Float:z,Float:vec
 	new Float:resize_x, Float:resize_y, Float:resize_z = floatsin(angle+vertical, degrees);
      
 	internal_BS_GXYIFOP(resize_x, resize_y, internal_BS_GPATP(0, 0, vector_x, vector_y)+horizontal, floatcos(angle+vertical, degrees));
-
-	if (internal_BS_DCTTL(camera_x, camera_y, camera_z, x, y, z, resize_x, resize_y, resize_z) < radius) return true;
+    #if !defined BUSTAIM_DISABLE_WSTATS
+    	if ((BustAim_g_DCTTL_temp = internal_BS_DCTTL(camera_x, camera_y, camera_z, x, y, z, resize_x, resize_y, resize_z)) < radius) return true;
+    #else
+		if (internal_BS_DCTTL(camera_x, camera_y, camera_z, x, y, z, resize_x, resize_y, resize_z) < radius) return true;
+	#endif
 	return false;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -213,14 +229,21 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 	static Float:hX,Float:hY,Float:hZ;
 	static Float:cX,Float:cY,Float:cZ;
 	
-	BustAim_g_ShotsFired[playerid][weaponid-22]++;
+	#if !defined BUSTAIM_DISABLE_PROFILING
+		BustAim_g_ShotsFired[playerid][weaponid-22]++;
+	#endif
+	
     if(hittype == BULLET_HIT_TYPE_PLAYER)
     {
-        BustAim_g_ShotsHit[playerid][weaponid-22]++;
+    	#if !defined BUSTAIM_DISABLE_PROFILING
+        	BustAim_g_ShotsHit[playerid][weaponid-22]++;
+		#endif
         if(BustAim_g_PlayerSettings{playerid} & IGNORE_PLAYER)
-            if(BustAim_g_OPWS_pointer != -1)
-	        	return _CALL_OPWS(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-	       	else return 1;
+            #if defined BustAim_OnPlayerWeaponShot
+	        	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+			#else
+				return 1;
+			#endif
         
 		if(BustAim_g_PlayerPrevWeapon{playerid} != weaponid)
 		{
@@ -239,32 +262,42 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 	      // 	else return 1;
 
         if(NetStats_PacketLossPercent(playerid) > BUSTAIM_MAX_PL_PERCENTAGE ||  NetStats_PacketLossPercent(hitid) > BUSTAIM_MAX_PL_PERCENTAGE)
-			if(BustAim_g_OPWS_pointer != -1)
-	     		return _CALL_OPWS(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-	    	else return 1;
+			#if defined BustAim_OnPlayerWeaponShot
+	           		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+			#else
+				return 1;
+			#endif
 
         if(GetPlayerPing(playerid) > BUSTAIM_MAX_PING ||  GetPlayerPing(playerid) > BUSTAIM_MAX_PING)
-			if(BustAim_g_OPWS_pointer != -1)
-	     		return _CALL_OPWS(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-	    	else return 1;
-	    	
+			#if defined BustAim_OnPlayerWeaponShot
+	           		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+			#else
+				return 1;
+			#endif
+			
    		if(IsPlayerInAnyVehicle(playerid) || IsPlayerInAnyVehicle(hitid))
-        	if(BustAim_g_OPWS_pointer != -1)
-         		return _CALL_OPWS(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-         	else return 1;
-
+        	#if defined BustAim_OnPlayerWeaponShot
+	       		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+			#else
+				return 1;
+			#endif
+			
 		if(GetPlayerSurfingVehicleID(playerid) != INVALID_VEHICLE_ID || GetPlayerSurfingVehicleID(hitid) != INVALID_VEHICLE_ID)
-      		if(BustAim_g_OPWS_pointer != -1)
-   				return _CALL_OPWS(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-			else return 1;
+      		#if defined BustAim_OnPlayerWeaponShot
+	           		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+				#else
+					return 1;
+				#endif
 
 		switch(weaponid)
 		{
 		    case BUSTAIM_SKIP_WEAPON_IDS:
 		    {
-		        if(BustAim_g_OPWS_pointer != -1)
-            		return _CALL_OPWS(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-         		else return 1;
+		        #if defined BustAim_OnPlayerWeaponShot
+	           		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+				#else
+					return 1;
+				#endif
 		    }
 		}
 	    
@@ -282,23 +315,35 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 		new Float:S2V_dist = VectorSize(pX-hX,pY-hY,pZ-hZ); //Shooter to Victim Distance
 		if(BustAim_g_PlayerSettings{playerid} & CHECK_FOR_OUT_OF_RANGE_SHOTS)
 			if(S2V_dist > BustAim_g_WeaponRange[weaponid-22])
+			{
+			    #if !defined BUSTAIM_DISABLE_WSTATS
+                    BustAim_g_RangeWarningStats[playerid][BustAim_g_OutOfRangeShots{playerid}%BUSTAIM_WSTATS_SHOTS] = S2V_dist;
+				#endif
 		        if(++BustAim_g_OutOfRangeShots{playerid} > BUSTAIM_OUT_OF_RANGE_PROBES)
 				{
 				    BustAim_g_OutOfRangeShots{playerid} = 0;
-				    BustAim_g_TotalOutOfRangeWarns[playerid][weaponid-22]++;
+				    #if !defined BUSTAIM_DISABLE_PROFILING
+				    	BustAim_g_TotalOutOfRangeWarns[playerid][weaponid-22]++;
+					#endif
 					warning |= WARNING_OUT_OF_RANGE_SHOT;
 				}
-
+			}
         if(BustAim_g_PlayerSettings{playerid} & CHECK_FOR_PROAIM_TELEPORT)
 			if(S2V_dist > MIN_DIST_FOR_TELEPORT_CHECKS)
 			    if(VectorSize(cX-hX,cY-hY,cZ-hZ) > MAX_B2V_DEVIATION)
+			    {
+			        #if !defined BUSTAIM_DISABLE_WSTATS
+                    	BustAim_g_TeleportWarningStats[playerid][BustAim_g_TeleportShots{playerid}%BUSTAIM_WSTATS_SHOTS] = VectorSize(cX-hX,cY-hY,cZ-hZ);
+					#endif
 			        if(++BustAim_g_TeleportShots{playerid} > BUSTAIM_PROAIM_TELEPORT_PROBES)
 					{
 					    BustAim_g_TeleportShots{playerid} = 0;
-					    BustAim_g_TotalTeleportWarns[playerid][weaponid-22]++;
+					    #if !defined BUSTAIM_DISABLE_PROFILING
+					    	BustAim_g_TotalTeleportWarns[playerid][weaponid-22]++;
+						#endif
 						warning |= WARNING_PROAIM_TELEPORT;
 					}
-
+				}
 		GetPlayerCameraFrontVector(playerid,pX,pY,pZ);
 		GetPlayerCameraPos(playerid,cX,cY,cZ);
 
@@ -307,56 +352,52 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 			    if(++BustAim_g_BackwardShot{playerid} > BUSTAIM_BACKWARD_SHOTS_PROBES)
 				{
 				    BustAim_g_BackwardShot{playerid} = 0;
-				    BustAim_g_TotalBackwardWarns[playerid][weaponid-22]++;
+				    #if !defined BUSTAIM_DISABLE_PROFILING
+				    	BustAim_g_TotalBackwardWarns[playerid][weaponid-22]++;
+					#endif
 					warning |= WARNING_BACKWARD_SHOT;
 				}
 
         if(BustAim_g_PlayerSettings{playerid} & CHECK_FOR_RANDOM_AIM_SHOTS)
 			if(S2V_dist > MIN_DIST_FOR_AIM_CHECKS)
 				if(!internal_BS_IsCameraAimingAt(weaponid,hX,hY,hZ,pX,pY,pZ,cX,cY,cZ,BUSTAIM_PLAYER_SPHERE_RADIUS))
+				{
+				    #if !defined BUSTAIM_DISABLE_WSTATS
+                    	BustAim_g_AimWarningStats[playerid][BustAim_g_RandomAimShots{playerid}%BUSTAIM_WSTATS_SHOTS] = BustAim_g_DCTTL_temp;
+					#endif
 	                if(++BustAim_g_RandomAimShots{playerid} > BUSTAIM_RANDOM_AIM_PROBES)
 	                {
 	                    BustAim_g_RandomAimShots{playerid} = 0;
-					    BustAim_g_TotalRandomAimWarns[playerid][weaponid-22]++;
+	                    #if !defined BUSTAIM_DISABLE_PROFILING
+					    	BustAim_g_TotalRandomAimWarns[playerid][weaponid-22]++;
+						#endif
 						warning |= WARNING_RANDOM_AIM;
 	                }
-
+				}
 		if(warning)
 		{
-		    #emit LOAD.S.pri    warning
-	        #emit PUSH.pri
-	        #emit LOAD.S.pri    weaponid
-	        #emit PUSH.pri
-	        #emit LOAD.S.pri    hitid
-	        #emit PUSH.pri
-	        #emit LOAD.S.pri    playerid
-	        #emit PUSH.pri
-
-	        #emit PUSH.C      16
-
-	        #emit LCTRL               6
-	        #emit ADD.C               28
-	        #emit PUSH.pri
-	        #emit LOAD.pri  BustAim_g_OPSFA_pointer
-	        #emit SCTRL               6
-	        #emit STOR.S.pri warning
+	        #if defined OnPlayerSuspectedForAimbot
+	           if(OnPlayerSuspectedForAimbot(playerid,hitid,weaponid,warning)) BustAim_g_PlayerSettings{playerid} |= IGNORE_PLAYER;
+	        #endif
 		}
-		if(warning)
-   			BustAim_g_PlayerSettings{playerid} |= IGNORE_PLAYER;
 	}
 	else
 	{
-	    if(BustAim_g_ContinousShots{playerid} > BustAim_g_MaxContinousShots[playerid][weaponid-22])
-            BustAim_g_MaxContinousShots[playerid][weaponid-22] = BustAim_g_ContinousShots{playerid};
+	    #if !defined BUSTAIM_DISABLE_PROFILING
+	    	if(BustAim_g_ContinousShots{playerid} > BustAim_g_MaxContinousShots[playerid][weaponid-22])
+            	BustAim_g_MaxContinousShots[playerid][weaponid-22] = BustAim_g_ContinousShots{playerid};
+	 	#endif
 	    BustAim_g_ContinousShots{playerid} =
 		BustAim_g_RandomAimShots{playerid} =
 		BustAim_g_TeleportShots{playerid} =
 		BustAim_g_OutOfRangeShots{playerid} =
 		BustAim_g_BackwardShot{playerid} = 0;
 	}
-    if(BustAim_g_OPWS_pointer != -1)
-    	return _CALL_OPWS(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-	else return 1;
+    #if defined BustAim_OnPlayerWeaponShot
+		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+	#else
+		return 1;
+	#endif
 }
 
 #if defined _ALS_OnPlayerWeaponShot
@@ -366,8 +407,72 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 #endif
 
 #define OnPlayerWeaponShot BustAim_OnPlayerWeaponShot
-forward BustAim_OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ);
+
+#if defined BustAim_OnPlayerWeaponShot
+	forward BustAim_OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ);
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if defined BUSTAIM_DISABLE_WSTATS
+stock BustAim::GetTeleportStats(playerid,Float:arr[],sz = sizeof(arr))
+{
+	#pragma unused playerid
+	#pragma unused arr
+	#pragma unused sz
+    print("[BUST-AIM] GetTeleportStats must not be used when WSTATS is disabled.");
+}
+stock BustAim::GetRandomAimStats(playerid,Float:arr[],sz = sizeof(arr))
+{
+    #pragma unused playerid
+	#pragma unused arr
+	#pragma unused sz
+    print("[BUST-AIM] GetAimStats must not be used when WSTATS is disabled.");
+}
+stock BustAim::GetRangeStats(playerid,Float:arr[],sz = sizeof(arr))
+{
+    #pragma unused playerid
+	#pragma unused arr
+	#pragma unused sz
+    print("[BUST-AIM] GetRangeStats must not be used when WSTATS is disabled.");
+}
+#else
+stock BustAim::GetTeleportStats(playerid,Float:arr[],sz = sizeof(arr))
+{
+	memcpy(_:arr,_:BustAim_g_TeleportWarningStats[playerid],0,sz*4,sz);
+}
+stock BustAim::GetRandomAimStats(playerid,Float:arr[],sz = sizeof(arr))
+{
+    memcpy(_:arr,_:BustAim_g_AimWarningStats[playerid],0,sz*4,sz);
+}
+stock BustAim::GetRangeStats(playerid,Float:arr[],sz = sizeof(arr))
+{
+    memcpy(_:arr,_:BustAim_g_RangeWarningStats[playerid],0,sz*4,sz);
+}
+#endif
+
+#if defined BUSTAIM_DISABLE_PROFILING
+stock BustAim::GetPlayerWeaponProfile(playerid,weaponid,&allshots,&hitshots,&max_cont_shots,&out_of_range_warns,&random_aim_warns,&proaim_tele_warns,&backward_shot_warns)
+{
+    #pragma unused playerid
+	#pragma unused weaponid
+	print("[BUST-AIM] GetPlayerWeaponProfile must not be used when profiling is disabled.");
+}
+stock BustAim::ResetPlayerWeaponProfile(playerid,weaponid)
+{
+    #pragma unused playerid
+	#pragma unused weaponid
+    print("[BUST-AIM] ResetWeaponProfile must not be used when profiling is disabled");
+}
+stock BustAim::GetPlayerProfile(playerid,&shotsfired,&shotshit,&max_cont_shots,&out_of_range_warns,&random_aim_warns,&proaim_tele_warns,&backward_shot_warns)
+{
+    #pragma unused playerid
+    print("[BUST-AIM] GetPlayerProfile must not be used when profiling is disabled.");
+}
+stock BustAim::ResetPlayerProfile(playerid)
+{
+    #pragma unused playerid
+    print("[BUST-AIM] ResetPlayerProfile must not be used when profiling is disabled.");
+}
+#else
 stock BustAim::GetPlayerWeaponProfile(playerid,weaponid,&allshots,&hitshots,&max_cont_shots,&out_of_range_warns,&random_aim_warns,&proaim_tele_warns,&backward_shot_warns)
 {
 	if(22 < weaponid < 39)
@@ -424,6 +529,7 @@ stock BustAim::ResetPlayerProfile(playerid)
 	Fill68(BustAim_g_ShotsHit[playerid]);
 	Fill68(BustAim_g_MaxContinousShots[playerid]);
 }
+#endif
 stock BustAim::SetPlayerFlags(playerid,flags)
 {
     BustAim_g_PlayerSettings{playerid} = flags;
@@ -437,92 +543,7 @@ stock BustAim::ResetPlayerFlags(playerid)
     BustAim_g_PlayerSettings{playerid} = BUSTAIM_DEFAULT_PLAYER_FLAGS;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static InitFunctionPointers()
-{
-    new tmp = funcidx("BustAim_OnPlayerWeaponShot");
-	if(tmp != -1)
-	{
-	   	#emit LCTRL       1
-		#emit NEG
-		#emit ADD.C       32
-		#emit STOR.pri  BustAim_g_OPWS_pointer
-		#emit LREF.alt  BustAim_g_OPWS_pointer
-		#emit LCTRL 1
-		#emit NEG
-		#emit ADD
-		#emit LOAD.S.alt  tmp
-		#emit SHL.C.alt   3
-		#emit ADD
-		#emit STOR.pri  BustAim_g_OPWS_pointer
-		#emit LREF.pri  BustAim_g_OPWS_pointer
-		#emit STOR.pri  BustAim_g_OPWS_pointer
-	}
-	if((tmp = funcidx("BustAim_OnPlayerConnect")) != -1)
-	{
-	    #emit LCTRL       1
-		#emit NEG
-		#emit ADD.C       32
-		#emit STOR.pri  BustAim_g_OPC_pointer
-		#emit LREF.alt  BustAim_g_OPC_pointer
-		#emit LCTRL 1
-		#emit NEG
-		#emit ADD
-		#emit LOAD.S.alt  tmp
-		#emit SHL.C.alt   3
-		#emit ADD
-		#emit STOR.pri  BustAim_g_OPC_pointer
-		#emit LREF.pri  BustAim_g_OPC_pointer
-		#emit STOR.pri  BustAim_g_OPC_pointer
-	}
-	if((tmp = funcidx("OnPlayerSuspectedForAimbot")) != -1)
-	{
-	    #emit LCTRL       1
-		#emit NEG
-		#emit ADD.C       32
-		#emit STOR.pri  BustAim_g_OPSFA_pointer
-		#emit LREF.alt  BustAim_g_OPSFA_pointer
-		#emit LCTRL 1
-		#emit NEG
-		#emit ADD
-		#emit LOAD.S.alt  tmp
-		#emit SHL.C.alt   3
-		#emit ADD
-		#emit STOR.pri  BustAim_g_OPSFA_pointer
-		#emit LREF.pri  BustAim_g_OPSFA_pointer
-		#emit STOR.pri  BustAim_g_OPSFA_pointer
-	}
-}
-static _CALL_OPWS(playerid,weaponid,hittype,hitid,Float:fX,Float:fY,Float:fZ)
-{
-    #emit LOAD.S.pri    fZ
-	#emit PUSH.pri
-	#emit LOAD.S.pri    fY
-	#emit PUSH.pri
-	#emit LOAD.S.pri    fX
-	#emit PUSH.pri
-	#emit LOAD.S.pri    hitid
-	#emit PUSH.pri
-	#emit LOAD.S.pri    hittype
-	#emit PUSH.pri
-	#emit LOAD.S.pri    weaponid
-	#emit PUSH.pri
-	#emit LOAD.S.pri    playerid
-	#emit PUSH.pri
-
-	#emit PUSH.C      28
-
-	#emit LCTRL		  6
-	#emit ADD.C		  28
-	#emit PUSH.pri
-	#emit LOAD.pri  BustAim_g_OPWS_pointer
-	#emit SCTRL		  6
-
-	#emit RETN
-
-	//will never reach here
-	return 0;
-}
-static Fill68(loc[])
+static stock Fill68(loc[])
 {
 	new val = 0;
   	#emit LOAD.S.alt loc
@@ -530,33 +551,6 @@ static Fill68(loc[])
 	#emit FILL 68
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#if defined FILTERSCRIPT
-	public OnFilterScriptInit()
-	{
-		InitFunctionPointers();
-	    return CallLocalFunction("BustAim_OnFilterScriptInit", "");
-	}
-	#if defined _ALS_OnFilterScriptInit
-	    #undef OnFilterScriptInit
-	#else
-	    #define _ALS_OnFilterScriptInit
-	#endif
-	#define OnFilterScriptInit BustAim_OnFilterScriptInit
-	forward BustAim_OnFilterScriptInit();
-#else
-	public OnGameModeInit()
-	{
-		InitFunctionPointers();
-		return CallLocalFunction("BustAim_OnGameModeInit","");
-	}
-	#if defined _ALS_OnGameModeInit
-	    #undef OnGameModeInit
-	#else
-	    #define _ALS_OnGameModeInit
-	#endif
-	#define OnGameModeInit BustAim_OnGameModeInit
-	forward BustAim_OnGameModeInit();
-#endif
 public OnPlayerConnect(playerid)
 {
     BustAim_g_PlayerSettings{playerid} = BUSTAIM_DEFAULT_PLAYER_FLAGS;
@@ -566,28 +560,21 @@ public OnPlayerConnect(playerid)
 	BustAim_g_TeleportShots{playerid} =
 	BustAim_g_OutOfRangeShots{playerid} =
 	BustAim_g_BackwardShot{playerid} = 0;
-	Fill68(BustAim_g_TotalRandomAimWarns[playerid]);
-	Fill68(BustAim_g_TotalTeleportWarns[playerid]);
-	Fill68(BustAim_g_TotalBackwardWarns[playerid]);
-	Fill68(BustAim_g_TotalOutOfRangeWarns[playerid]);
-	Fill68(BustAim_g_ShotsFired[playerid]);
-	Fill68(BustAim_g_ShotsHit[playerid]);
-	Fill68(BustAim_g_MaxContinousShots[playerid]);
-	if(BustAim_g_OPC_pointer != -1)
-	{
-		#emit LOAD.S.pri    playerid
-		#emit PUSH.pri
+	#if !defined BUSTAIM_DISABLE_PROFILING
+		Fill68(BustAim_g_TotalRandomAimWarns[playerid]);
+		Fill68(BustAim_g_TotalTeleportWarns[playerid]);
+		Fill68(BustAim_g_TotalBackwardWarns[playerid]);
+		Fill68(BustAim_g_TotalOutOfRangeWarns[playerid]);
+		Fill68(BustAim_g_ShotsFired[playerid]);
+		Fill68(BustAim_g_ShotsHit[playerid]);
+		Fill68(BustAim_g_MaxContinousShots[playerid]);
+	#endif
 
-		#emit PUSH.C      4
-
-		#emit LCTRL		  6
-		#emit ADD.C		  28
-		#emit PUSH.pri
-		#emit LOAD.pri  BustAim_g_OPC_pointer
-		#emit SCTRL		  6
-		#emit RETN
-	}
-	return 1;
+	#if defined BustAim_OnPlayerConnect
+		return BustAim_OnPlayerConnect(playerid);
+	#else
+		return 1;
+	#endif
 }
 #if defined _ALS_OnPlayerConnect
 #undef OnPlayerConnect
@@ -596,5 +583,8 @@ public OnPlayerConnect(playerid)
 #endif
 
 #define OnPlayerConnect BustAim_OnPlayerConnect
-forward BustAim_OnPlayerConnect(playerid);
+
+#if defined BustAim_OnPlayerConnect
+	forward BustAim_OnPlayerConnect(playerid);
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
