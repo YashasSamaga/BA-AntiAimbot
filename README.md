@@ -50,6 +50,14 @@ Changes from 1.1 R3 to 1.2:
     Added new functions
     Changed the callback warning system
     Added player flags
+    Changes from 1.2 to 1.2.1:
+    
+14/5/2015
+
+    Renamed few functions(functions that are used within BustAim)
+    Added Return Handling for OPSFA
+    Minor Fixes & Indentations
+
 
 
 Credits
