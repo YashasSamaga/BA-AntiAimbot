@@ -4,7 +4,7 @@
 //BustAim is an feature rich include which tries to detect players with aimbots.It by itself cannot be for sure if the player
 //is using aimbot.It is designed to trigger warnings and provide administrators with vital information about the suspect.
 //BustAim tries its level best to detect players who are using aimbots.This include while detecting players for aimbots
-//sometimes also detects some miscellaneous hacks such AFK Ghost(Randomly Aimed Shots) or modified weapon.dat
+//sometimes also detects some miscellaneous hacks.
 //
 //License:Public Domain
 //
