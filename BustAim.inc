@@ -4,7 +4,7 @@
 //BustAim is an feature rich include which tries to detect players with aimbots.It by itself cannot be for sure if the player
 //is using aimbot.It is designed to trigger warnings and provide administrators with vital information about the suspect.
 //BustAim tries its level best to detect players who are using aimbots.This include while detecting players for aimbots
-//sometimes also detects some miscellaneous hacks.
+//sometimes also detects some miscellaneous hacks such AFK Ghost(Randomly Aimed Shots) or modified weapon.dat
 //
 //License:Public Domain
 //
@@ -79,6 +79,9 @@
 #if !defined BUSTAIM_WSTATS_SHOTS
 	#define BUSTAIM_WSTATS_SHOTS 3
 #endif
+#if !defined BUSTAIM_MIN_MSG_RECV_PSEC
+	#define BUSTAIM_MIN_MSG_RECV_PSEC 4
+#endif
 
 //DO NOT CHANGE THIS
 #define BS_TOTAL_SHOOTING_WEAPONS 17 //includes RPG,HS,FT
@@ -100,6 +103,10 @@ enum (<<=1)
 }
 enum (<<=1)
 {
+	PREVIOUS_SHOT_DID_DAMAGE=1
+}
+enum (<<=1)
+{
 	CHECK_FOR_OUT_OF_RANGE_SHOTS=1,
 	CHECK_FOR_PROAIM_TELEPORT,
 	CHECK_FOR_RANDOM_AIM_SHOTS,
@@ -108,7 +115,7 @@ enum (<<=1)
 	IGNORE_PLAYER
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Modified(increased M4,AK Ranges from 70,90 to 100,120) Slice's Max Weapon Ranges from Weapon Config Include
+//Modified Slice's Max Weapon Ranges from Weapon Config Include
 new const Float:BustAim_g_WeaponRange[] =
 {
 	35.0, // 22 - Colt 45
@@ -132,6 +139,8 @@ new const Float:BustAim_g_WeaponRange[] =
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static BustAim_g_PlayerSettings[MAX_PLAYERS char];
 static BustAim_g_PlayerPrevWeapon[MAX_PLAYERS char];
+
+static BustAim_g_IntrnlPlayerSettings[MAX_PLAYERS char];
 
 static BustAim_g_ContinousShots[MAX_PLAYERS char];
 static BustAim_g_RandomAimShots[MAX_PLAYERS char];
@@ -256,11 +265,19 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 		    BustAim_g_PlayerPrevWeapon{playerid} = weaponid;
 		}
         
-        //if(IsPlayerNPC(playerid) || IsPlayerNPC(hitid))
-	     //   if(BustAim_g_OPWS_pointer != -1)
-	      //  	return _CALL_OPWS(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-	      // 	else return 1;
-
+        if(IsPlayerNPC(playerid) || IsPlayerNPC(hitid))
+	       	#if defined BustAim_OnPlayerWeaponShot
+	           		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+			#else
+				return 1;
+			#endif
+		if(NetStats_MessagesRecvPerSecond(playerid) < BUSTAIM_MIN_MSG_RECV_PSEC || NetStats_MessagesRecvPerSecond(hitid) < BUSTAIM_MIN_MSG_RECV_PSEC)
+        	#if defined BustAim_OnPlayerWeaponShot
+	           		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+			#else
+				return 1;
+			#endif
+			
         if(NetStats_PacketLossPercent(playerid) > BUSTAIM_MAX_PL_PERCENTAGE ||  NetStats_PacketLossPercent(hitid) > BUSTAIM_MAX_PL_PERCENTAGE)
 			#if defined BustAim_OnPlayerWeaponShot
 	           		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
@@ -314,23 +331,29 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 
 		new Float:S2V_dist = VectorSize(pX-hX,pY-hY,pZ-hZ); //Shooter to Victim Distance
 		if(BustAim_g_PlayerSettings{playerid} & CHECK_FOR_OUT_OF_RANGE_SHOTS)
+		{
 			if(S2V_dist > BustAim_g_WeaponRange[weaponid-22])
 			{
-			    #if !defined BUSTAIM_DISABLE_WSTATS
-                    BustAim_g_RangeWarningStats[playerid][BustAim_g_OutOfRangeShots{playerid}%BUSTAIM_WSTATS_SHOTS] = S2V_dist;
+				#if !defined BUSTAIM_DISABLE_WSTATS
+	     			BustAim_g_RangeWarningStats[playerid][BustAim_g_OutOfRangeShots{playerid}%BUSTAIM_WSTATS_SHOTS] = S2V_dist;
 				#endif
-		        if(++BustAim_g_OutOfRangeShots{playerid} > BUSTAIM_OUT_OF_RANGE_PROBES)
-				{
-				    BustAim_g_OutOfRangeShots{playerid} = 0;
-				    #if !defined BUSTAIM_DISABLE_PROFILING
-				    	BustAim_g_TotalOutOfRangeWarns[playerid][weaponid-22]++;
-					#endif
-					warning |= WARNING_OUT_OF_RANGE_SHOT;
+				 if(BustAim_g_IntrnlPlayerSettings[playerid] & PREVIOUS_SHOT_DID_DAMAGE)
+				 {
+					if(++BustAim_g_OutOfRangeShots{playerid} > BUSTAIM_OUT_OF_RANGE_PROBES)
+					{
+						BustAim_g_OutOfRangeShots{playerid} = 0;
+						#if !defined BUSTAIM_DISABLE_PROFILING
+							BustAim_g_TotalOutOfRangeWarns[playerid][weaponid-22]++;
+						#endif
+						warning |= WARNING_OUT_OF_RANGE_SHOT;
+					}
+					BustAim_g_IntrnlPlayerSettings{playerid} &= ~PREVIOUS_SHOT_DID_DAMAGE;
 				}
 			}
+		}
         if(BustAim_g_PlayerSettings{playerid} & CHECK_FOR_PROAIM_TELEPORT)
 			if(S2V_dist > MIN_DIST_FOR_TELEPORT_CHECKS)
-			    if(VectorSize(cX-hX,cY-hY,cZ-hZ) > MAX_B2V_DEVIATION)
+				if(VectorSize(cX-hX,cY-hY,cZ-hZ) > MAX_B2V_DEVIATION)
 			    {
 			        #if !defined BUSTAIM_DISABLE_WSTATS
                     	BustAim_g_TeleportWarningStats[playerid][BustAim_g_TeleportShots{playerid}%BUSTAIM_WSTATS_SHOTS] = VectorSize(cX-hX,cY-hY,cZ-hZ);
@@ -399,7 +422,15 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 		return 1;
 	#endif
 }
-
+public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart)
+{
+    BustAim_g_IntrnlPlayerSettings{playerid} |= PREVIOUS_SHOT_DID_DAMAGE;
+	#if defined BustAim_OnPlayerGiveDamage
+		return BustAim_OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart);
+	#else
+		return 1;
+	#endif
+}
 #if defined _ALS_OnPlayerWeaponShot
 #undef OnPlayerWeaponShot
 #else
@@ -410,6 +441,18 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 
 #if defined BustAim_OnPlayerWeaponShot
 	forward BustAim_OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ);
+#endif
+
+#if defined _ALS_OnPlayerGiveDamage
+#undef OnPlayerGiveDamage
+#else
+#define _ALS_OnPlayerGiveDamage
+#endif
+
+#define OnPlayerGiveDamage BustAim_OnPlayerGiveDamage
+
+#if defined BustAim_OnPlayerGiveDamage
+	forward BustAim_OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart);
 #endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if defined BUSTAIM_DISABLE_WSTATS
@@ -554,7 +597,7 @@ static stock Fill68(loc[])
 public OnPlayerConnect(playerid)
 {
     BustAim_g_PlayerSettings{playerid} = BUSTAIM_DEFAULT_PLAYER_FLAGS;
-	
+	BustAim_g_IntrnlPlayerSettings{playerid} =
     BustAim_g_ContinousShots{playerid} =
 	BustAim_g_RandomAimShots{playerid} =
 	BustAim_g_TeleportShots{playerid} =
