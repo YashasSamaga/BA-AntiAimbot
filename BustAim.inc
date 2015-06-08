@@ -38,10 +38,10 @@
 #define BustAim:: BS_
 
 #if !defined BUSTAIM_MAX_PL_PERCENTAGE
-	#define BUSTAIM_MAX_PL_PERCENTAGE 2
+	#define BUSTAIM_MAX_PL_PERCENTAGE 2.5
 #endif
 #if !defined BUSTAIM_MAX_PING
-	#define BUSTAIM_MAX_PING 350
+	#define BUSTAIM_MAX_PING 400
 #endif
 #if !defined BUSTAIM_SKIP_WEAPON_IDS
 	#define BUSTAIM_SKIP_WEAPON_IDS 38
@@ -79,9 +79,6 @@
 #if !defined BUSTAIM_WSTATS_SHOTS
 	#define BUSTAIM_WSTATS_SHOTS 3
 #endif
-#if !defined BUSTAIM_MIN_MSG_RECV_PSEC
-	#define BUSTAIM_MIN_MSG_RECV_PSEC 4
-#endif
 
 //DO NOT CHANGE THIS
 #define BS_TOTAL_SHOOTING_WEAPONS 17 //includes RPG,HS,FT
@@ -103,7 +100,7 @@ enum (<<=1)
 }
 enum (<<=1)
 {
-	PREVIOUS_SHOT_DID_DAMAGE=1
+	PREVIOUS_SHOT_DID_DAMAGE=1,
 }
 enum (<<=1)
 {
@@ -115,26 +112,26 @@ enum (<<=1)
 	IGNORE_PLAYER
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Modified Slice's Max Weapon Ranges from Weapon Config Include
+//Modified Slice's Max Weapon Ranges from Weapon Config Include (Added 10 units extra for every weapon for security reasons)
 new const Float:BustAim_g_WeaponRange[] =
 {
-	35.0, // 22 - Colt 45
-	35.0, // 23 - Silenced
-	35.0, // 24 - Deagle
-	40.0, // 25 - Shotgun
-	35.0, // 26 - Sawed-off
-	40.0, // 27 - Spas
-	35.0, // 28 - UZI
-	45.0, // 29 - MP5
+	45.0, // 22 - Colt 45
+	45.0, // 23 - Silenced
+	45.0, // 24 - Deagle
+	50.0, // 25 - Shotgun
+	45.0, // 26 - Sawed-off
+	50.0, // 27 - Spas
+	45.0, // 28 - UZI
+	55.0, // 29 - MP5
 	100.0, // 30 - AK47
 	120.0, // 31 - M4
-	35.0, // 32 - Tec9
-	100.0, // 33 - Cuntgun
+	45.0, // 32 - Tec9
+	110.0, // 33 - Cuntgun
 	320.0, // 34 - Sniper
 	0.0, // 35 - Rocket launcher
 	0.0, // 36 - Heatseeker
 	0.0, // 37 - Flamethrower
-	75.0  // 38 - Minigun
+	85.0  // 38 - Minigun
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static BustAim_g_PlayerSettings[MAX_PLAYERS char];
@@ -163,6 +160,10 @@ static Float:BustAim_g_TeleportWarningStats[MAX_PLAYERS][BUSTAIM_WSTATS_SHOTS];
 static Float:BustAim_g_AimWarningStats[MAX_PLAYERS][BUSTAIM_WSTATS_SHOTS];
 static Float:BustAim_g_RangeWarningStats[MAX_PLAYERS][BUSTAIM_WSTATS_SHOTS];
 static Float:BustAim_g_DCTTL_temp;
+#endif
+
+#if !defined BUSTAIM_IS_PAUSED_FUNCTION
+static BustAim_g_LastUpdateTick[MAX_PLAYERS];
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static Float:internal_BS_DCTTL(Float:CamX, Float:CamY, Float:CamZ, Float:ObjX, Float:ObjY, Float:ObjZ, Float:FrX, Float:FrY, Float:FrZ)
@@ -264,19 +265,30 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 			
 		    BustAim_g_PlayerPrevWeapon{playerid} = weaponid;
 		}
-        
+       
         if(IsPlayerNPC(playerid) || IsPlayerNPC(hitid))
 	       	#if defined BustAim_OnPlayerWeaponShot
-	           		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+	        	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
 			#else
 				return 1;
 			#endif
-		if(NetStats_MessagesRecvPerSecond(playerid) < BUSTAIM_MIN_MSG_RECV_PSEC || NetStats_MessagesRecvPerSecond(hitid) < BUSTAIM_MIN_MSG_RECV_PSEC)
-        	#if defined BustAim_OnPlayerWeaponShot
-	           		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-			#else
-				return 1;
-			#endif
+       
+    	#if defined BUSTAIM_IS_PAUSED_FUNCTION
+		    if(BUSTAIM_IS_PAUSED_FUNCTION(playerid) || BUSTAIM_IS_PAUSED_FUNCTION(hitid))
+			    #if defined BustAim_OnPlayerWeaponShot
+		        	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+				#else
+					return 1;
+				#endif
+		#else
+			new tmp = GetTickCount();
+		    if((tmp - BustAim_g_LastUpdateTick[playerid] > 1000) || (tmp - BustAim_g_LastUpdateTick[hitid] > 1000))
+			    #if defined BustAim_OnPlayerWeaponShot
+		        	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+				#else
+					return 1;
+				#endif
+		#endif
 			
         if(NetStats_PacketLossPercent(playerid) > BUSTAIM_MAX_PL_PERCENTAGE ||  NetStats_PacketLossPercent(hitid) > BUSTAIM_MAX_PL_PERCENTAGE)
 			#if defined BustAim_OnPlayerWeaponShot
@@ -629,5 +641,29 @@ public OnPlayerConnect(playerid)
 
 #if defined BustAim_OnPlayerConnect
 	forward BustAim_OnPlayerConnect(playerid);
+#endif
+
+#if !defined BUSTAIM_IS_PAUSED_FUNCTION
+	public OnPlayerUpdate(playerid)
+	{
+	    BustAim_g_LastUpdateTick[playerid] = GetTickCount();
+	    
+	    #if defined BustAim_OnPlayerUpdate
+			return BustAim_OnPlayerUpdate(playerid);
+		#else
+			return 1;
+		#endif
+	}
+	#if defined _ALS_OnPlayerUpdate
+	#undef OnPlayerUpdate
+	#else
+	#define _ALS_OnPlayerUpdate
+	#endif
+
+	#define OnPlayerUpdate BustAim_OnPlayerUpdate
+
+	#if defined BustAim_OnPlayerUpdate
+		forward BustAim_OnPlayerUpdate(playerid);
+	#endif
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
