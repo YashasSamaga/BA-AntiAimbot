@@ -15,16 +15,18 @@ Features
     Provides functions to profile player shots
     Takes care of packet loss,high ping,players surfing on vehicles,players in vehicle and much more before suspecting a player for aimbot
 
-Development Team:
-Yashas - Made BustAim
-RedShirt & niCe & JernejL for camera/aiming functions
-Slice for the information regarding Maximum Weapon Firing Range
+Credits:
 
-Beta-Testing Team:
-ipsLeon - helped me in conducting vigorous tests on BustAim's first few releases
-Airman123 - Owner of Cruel World Deathmatch Server
-Unforgiven - Administrator from Cruel World Deathmatch Server
+    [Development Team]
+    Yashas - Made BustAim
+    RedShirt & niCe & JernejL for camera/aiming functions
+    Slice for the information regarding Maximum Weapon Firing Range
 
-Thanks to:
-ipsLeon & Kyance for their aimbot detectors
-Pottus for constructive criticism 
+    [Beta-Testing Team]
+    ipsLeon - helped me in conducting vigorous tests on BustAim's first few releases
+    Airman123 - Owner of Cruel World Deathmatch Server
+    Unforgiven - Administrator from Cruel World Deathmatch Server
+
+    [Thanks to]
+    ipsLeon & Kyance for their aimbot detectors
+    Pottus for constructive criticism 
