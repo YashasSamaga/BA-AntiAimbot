@@ -15,70 +15,16 @@ Features
     Provides functions to profile player shots
     Takes care of packet loss,high ping,players surfing on vehicles,players in vehicle and much more before suspecting a player for aimbot
 
-
-Change Log
-First Version
-20/4/2015
-
-Changes from 1.0 to 1.1:
-1/5/2015
-
-    Added Backward Shot Detection
-    Optimizations & Large Improvements
-    Added more settings
-
-
-Changes from 1.1 R1 to 1.1 R2:
-2/5/2015
-
-    Minor Improvements
-
-
-Changes from 1.1 R2 to 1.1 R3:
-3/5/2015
-
-    More accurate detections
-    Made improvements to Backward Shot Detection
-
-
-Changes from 1.1 R3 to 1.2:
-7/5/2015
-
-    Revised the whole include
-    1000% less false warnings
-    Added Out of Weapon Range Shot Detection
-    Added new functions
-    Changed the callback warning system
-    Added player flags
-    Changes from 1.2 to 1.2.1:
-    
-
-Changes from 1.2 to 1.2.1:
-14/5/2015
-
-    Renamed few functions(functions that are used within BustAim)
-    Added Return Handling for OPSFA
-    Minor Fixes & Indentations
-
-
-Changes from 1.2 to 1.2.2:
-15/5/2015
-
-    Added new settings which allows disabling profiling to save CPU
-    Added WSTATS feature and a setting to disable it
-    Changed default settings
-    Updated to Hook Method 7 from #EMIT Method
-
-
-
-Credits
-Yashas
-
+Development Team:
+Yashas - Made BustAim
 RedShirt & niCe & JernejL for camera/aiming functions
+Slice for the information regarding Maximum Weapon Firing Range
 
+Beta-Testing Team:
+ipsLeon - helped me in conducting vigorous tests on BustAim's first few releases
+Airman123 - Owner of Cruel World Deathmatch Server
+Unforgiven - Administrator from Cruel World Deathmatch Server
+
+Thanks to:
 ipsLeon & Kyance for their aimbot detectors
-
-Pottus for constructive criticism
-
-Slice for the information regarding Maximum Weapon Firing Range 
-
+Pottus for constructive criticism 
