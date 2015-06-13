@@ -265,27 +265,27 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 		    BustAim_g_PlayerPrevWeapon{playerid} = weaponid;
 		}
 
-        //if(IsPlayerNPC(hitid))
+        if(IsPlayerNPC(hitid))
 	       	#if defined BustAim_OnPlayerWeaponShot
-	   //     	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-			#else
-		//		return 1;
-			#endif
+	        	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+		#else
+			return 1;
+		#endif
 
     	#if defined BUSTAIM_IS_PAUSED_FUNCTION
-		  //  if(BUSTAIM_IS_PAUSED_FUNCTION(hitid))
-			    #if defined BustAim_OnPlayerWeaponShot
-		    //    	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-				#else
-			//		return 1;
-				#endif
+		    if(BUSTAIM_IS_PAUSED_FUNCTION(hitid))
+			#if defined BustAim_OnPlayerWeaponShot
+		    		return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+			#else
+				return 1;
+			#endif
 		#else
 		    if((GetTickCount() - BustAim_g_LastUpdateTick[hitid]) > 1000)
-			    #if defined BustAim_OnPlayerWeaponShot
+			#if defined BustAim_OnPlayerWeaponShot
 		        	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-				#else
-					return 1;
-				#endif
+			#else
+				return 1;
+			#endif
 		#endif
 
         if(NetStats_PacketLossPercent(playerid) > BUSTAIM_MAX_PL_PERCENTAGE ||  NetStats_PacketLossPercent(hitid) > BUSTAIM_MAX_PL_PERCENTAGE)
