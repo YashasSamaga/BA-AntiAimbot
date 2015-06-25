@@ -537,7 +537,7 @@ stock BustAim::GetPlayerWeaponProfile(playerid,weaponid,&allshots,&hitshots,&max
 		hitshots = BustAim_g_ShotsHit[playerid][weaponid];
 		max_cont_shots = BustAim_g_MaxContinousShots[playerid][weaponid];
 		out_of_range_warns = BustAim_g_TotalOutOfRangeWarns[playerid][weaponid];
-	    	random_aim_warns = BustAim_g_TotalRandomAimWarns[playerid][weaponid];
+	  	random_aim_warns = BustAim_g_TotalRandomAimWarns[playerid][weaponid];
 		proaim_tele_warns = BustAim_g_TotalTeleportWarns[playerid][weaponid];
 		backward_shot_warns = BustAim_g_TotalBackwardWarns[playerid][weaponid];
 		return 0;
@@ -546,14 +546,14 @@ stock BustAim::GetPlayerWeaponProfile(playerid,weaponid,&allshots,&hitshots,&max
 }
 stock BustAim::ResetPlayerWeaponProfile(playerid,weaponid)
 {
-    	if(22 < weaponid < 39)
+	if(22 < weaponid < 39)
 	{
 		weaponid -= 22;
 		BustAim_g_ShotsFired[playerid][weaponid] =
 		BustAim_g_ShotsHit[playerid][weaponid] =
 		BustAim_g_MaxContinousShots[playerid][weaponid] =
 		BustAim_g_TotalOutOfRangeWarns[playerid][weaponid] =
-	    	BustAim_g_TotalRandomAimWarns[playerid][weaponid] =
+		BustAim_g_TotalRandomAimWarns[playerid][weaponid] =
 		BustAim_g_TotalTeleportWarns[playerid][weaponid] =
 		BustAim_g_TotalBackwardWarns[playerid][weaponid] = 0;
 		return 0;
@@ -562,8 +562,6 @@ stock BustAim::ResetPlayerWeaponProfile(playerid,weaponid)
 }
 stock BustAim::GetPlayerProfile(playerid,&shotsfired,&shotshit,&max_cont_shots,&out_of_range_warns,&random_aim_warns,&proaim_tele_warns,&backward_shot_warns)
 {
-	if(22 < weaponid < 39) return 1;
-	
 	for(new i = 0;i < BS_TOTAL_SHOOTING_WEAPONS;i++)
 	{
 	    shotsfired += BustAim_g_ShotsFired[playerid][i];
@@ -576,12 +574,11 @@ stock BustAim::GetPlayerProfile(playerid,&shotsfired,&shotshit,&max_cont_shots,&
 	    	max_cont_shots = BustAim_g_MaxContinousShots[playerid][i];
 	    return 0;
 	}
+	return 1;
 }
 stock BustAim::ResetPlayerProfile(playerid)
 {
-	if(22 < weaponid < 39) return 1;
-	
-    	Fill68(BustAim_g_TotalRandomAimWarns[playerid]);
+   	Fill68(BustAim_g_TotalRandomAimWarns[playerid]);
 	Fill68(BustAim_g_TotalTeleportWarns[playerid]);
 	Fill68(BustAim_g_TotalBackwardWarns[playerid]);
 	Fill68(BustAim_g_TotalOutOfRangeWarns[playerid]);
