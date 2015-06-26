@@ -530,7 +530,7 @@ stock BustAim::ResetPlayerProfile(playerid)
 #else
 stock BustAim::GetPlayerWeaponProfile(playerid,weaponid,&allshots,&hitshots,&max_cont_shots,&out_of_range_warns,&random_aim_warns,&proaim_tele_warns,&backward_shot_warns)
 {
-	if(22 < weaponid < 39)
+	if(22 <= weaponid <= 39)
 	{
 		weaponid -= 22;
 		allshots = BustAim_g_ShotsFired[playerid][weaponid];
@@ -546,7 +546,7 @@ stock BustAim::GetPlayerWeaponProfile(playerid,weaponid,&allshots,&hitshots,&max
 }
 stock BustAim::ResetPlayerWeaponProfile(playerid,weaponid)
 {
-	if(22 < weaponid < 39)
+	if(22 <= weaponid <= 39)
 	{
 		weaponid -= 22;
 		BustAim_g_ShotsFired[playerid][weaponid] =
