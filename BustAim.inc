@@ -113,7 +113,7 @@ enum (<<=1)
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Modified Slice's Max Weapon Ranges from Weapon Config Include (Added 10 units extra for every weapon to make allowance for lagging players)
-new const Float:BustAim_g_WeaponRange[] =
+static const Float:BustAim_g_WeaponRange[] =
 {
 	45.0, // 22 - Colt 45
 	45.0, // 23 - Silenced
@@ -134,7 +134,7 @@ new const Float:BustAim_g_WeaponRange[] =
 	85.0  // 38 - Minigun
 };
 //Original Slice's Max Weapon Ranges'
-static const Float:BustAim_g_WeaponRangeOriginal[] =
+new const Float:BustAim_g_WeaponRangeOriginal[] =
 {
 	35.0, // 22 - Colt 45
 	35.0, // 23 - Silenced
