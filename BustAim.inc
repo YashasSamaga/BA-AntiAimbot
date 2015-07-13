@@ -86,7 +86,7 @@
 	#error BS_TOTAL_SHOOTING_WEAPONS should always be set to 17
 #endif
 
-#define BS_GetNormalWeaponRange(weaponid) BustAim_g_WeaponRange[weaponid-22]
+#define BS_GetNormalWeaponRange(weaponid) BustAim_g_WeaponRangeOriginal[weaponid-22]
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 forward OnPlayerSuspectedForAimbot(playerid,hitid,weaponid,warnings);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +112,7 @@ enum (<<=1)
 	IGNORE_PLAYER
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Modified Slice's Max Weapon Ranges from Weapon Config Include (Added 10 units extra for every weapon for security reasons)
+//Modified Slice's Max Weapon Ranges from Weapon Config Include (Added 10 units extra for every weapon to make allowance for lagging players)
 new const Float:BustAim_g_WeaponRange[] =
 {
 	45.0, // 22 - Colt 45
@@ -132,6 +132,27 @@ new const Float:BustAim_g_WeaponRange[] =
 	0.0, // 36 - Heatseeker
 	0.0, // 37 - Flamethrower
 	85.0  // 38 - Minigun
+};
+//Original Slice's Max Weapon Ranges'
+static const Float:BustAim_g_WeaponRangeOriginal[] =
+{
+	35.0, // 22 - Colt 45
+	35.0, // 23 - Silenced
+	35.0, // 24 - Deagle
+	40.0, // 25 - Shotgun
+	35.0, // 26 - Sawed-off
+	40.0, // 27 - Spas
+	35.0, // 28 - UZI
+	45.0, // 29 - MP5
+	70.0, // 30 - AK47
+	90.0, // 31 - M4
+	35.0, // 32 - Tec9
+	100.0, // 33 - Cuntgun
+	320.0, // 34 - Sniper
+	0.0, // 35 - Rocket launcher
+	0.0, // 36 - Heatseeker
+	0.0, // 37 - Flamethrower
+	75.0  // 38 - Minigun
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static BustAim_g_PlayerSettings[MAX_PLAYERS char];
