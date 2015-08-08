@@ -316,7 +316,7 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 				return 1;
 			#endif
 
-        if(GetPlayerPing(playerid) > BUSTAIM_MAX_PING ||  GetPlayerPing(playerid) > BUSTAIM_MAX_PING)
+        if(GetPlayerPing(playerid) > BUSTAIM_MAX_PING ||  GetPlayerPing(hitid) > BUSTAIM_MAX_PING)
 			#if defined BustAim_OnPlayerWeaponShot
 	        	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
 			#else
