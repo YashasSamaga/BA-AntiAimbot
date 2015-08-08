@@ -286,12 +286,12 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 		    BustAim_g_PlayerPrevWeapon{playerid} = weaponid;
 		}
 
-        if(IsPlayerNPC(hitid))
-	       	#if defined BustAim_OnPlayerWeaponShot
-	        	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
-		#else
-			return 1;
-		#endif
+        //if(IsPlayerNPC(hitid))
+	    //   	#if defined BustAim_OnPlayerWeaponShot
+	    //    	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+		//#else
+		//	return 1;
+		//#endif
 
     	#if defined BUSTAIM_IS_PAUSED_FUNCTION
 		    if(BUSTAIM_IS_PAUSED_FUNCTION(hitid))
@@ -593,7 +593,6 @@ stock BustAim::GetPlayerProfile(playerid,&shotsfired,&shotshit,&max_cont_shots,&
 	    backward_shot_warns += BustAim_g_TotalBackwardWarns[playerid][i];
 	    if(BustAim_g_MaxContinousShots[playerid][i] > max_cont_shots)
 	    	max_cont_shots = BustAim_g_MaxContinousShots[playerid][i];
-	    return 0;
 	}
 	return 1;
 }
