@@ -134,7 +134,7 @@ static const Float:BustAim_g_WeaponRange[] =
 	85.0  // 38 - Minigun
 };
 //Original Slice's Max Weapon Ranges'
-static stock const Float:BustAim_g_WeaponRangeOriginal[] =
+stock const Float:BustAim_g_WeaponRangeOriginal[] =
 {
 	35.0, // 22 - Colt 45
 	35.0, // 23 - Silenced
