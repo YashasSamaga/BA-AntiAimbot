@@ -53,11 +53,6 @@ public OnPlayerSuspectedForAimbot(playerid,hitid,weaponid,warnings)
 		format(str,256,"Random Aim Offsets: 1)%f 2)%f 3)%f",Wstats[0],Wstats[1],Wstats[2]);
 		SendClientMessageToAll(-1,str);
 	}
-	if(warnings & WARNING_BACKWARD_SHOT)
-	{
-	    format(str,256,"[%d]%s(%d) shot a player behind him with %s.",ids[playerid],nme,playerid,wname);
-		SendClientMessageToAll(-1,str);
-	}
 	if(warnings & WARNING_CONTINOUS_SHOTS)
 	{
 	    format(str,256,"[%d]%s(%d) has fired 10 shots continously with %s(%d)",ids[playerid],nme,playerid,wname,weaponid);
@@ -225,12 +220,12 @@ COMMAND:profile(playerid,params[])
 	    return SendClientMessage(playerid, 0xFF0000AA, "Usage:/profile [PlayerID/Name]");
 	}
     new allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns,backward_shot_warns;
-    BustAim::GetPlayerProfile(id,allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns,backward_shot_warns);
+    BustAim::GetPlayerProfile(id,allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns);
 	new str[144],name[MAX_PLAYER_NAME];
 	GetPlayerName(id,name,MAX_PLAYER_NAME);
 	format(str,144,"BustAim Profile of %s(%d):Complete Profile:Stats of all weapons",name,id);
 	SendClientMessage(playerid,COLOR_GREEN,str);
-	format(str,144,"Fired:%d Hits:%d HitPercentage:%.2f MaxContinousShots:%d Bullets OutOfRangeWarns:%d AimWarns:%d TeleportWarns:%d BackwardShotWarns:%d",allshots,hitshots,((hitshots*100.0)/allshots),max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns,backward_shot_warns);
+	format(str,144,"Fired:%d Hits:%d HitPercentage:%.2f MaxContinousShots:%d Bullets OutOfRangeWarns:%d AimWarns:%d TeleportWarns:%d",allshots,hitshots,((hitshots*100.0)/allshots),max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns);
 	SendClientMessage(playerid,COLOR_GREEN,str);
 	return 1;
 }
@@ -242,13 +237,13 @@ COMMAND:wprofile(playerid,params[])
 	    return SendClientMessage(playerid, 0xFF0000AA, "Usage:/wprofile [PlayerID/Name] [WeaponID]");
 	}
     new allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns,backward_shot_warns;
-    BustAim::GetPlayerWeaponProfile(playerid,wid,allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns,backward_shot_warns);
+    BustAim::GetPlayerWeaponProfile(playerid,wid,allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns);
 	new str[144],name[MAX_PLAYER_NAME],wname[32];
 	GetPlayerName(id,name,MAX_PLAYER_NAME);
 	GetWeaponName(wid,wname,32);
 	format(str,144,"BustAim Weapon Profile of %s(%d):Stats of Weapon %s(%d)",name,id,wname,wid);
 	SendClientMessage(playerid,COLOR_GREEN,str);
-	format(str,144,"Fired:%d Hits:%d HitPercentage:%.2f MaxContinousShots:%d Bullets OutOfRangeWarns:%d AimWarns:%d TeleportWarns:%d BackwardShotWarns:%d",allshots,hitshots,((hitshots*100.0)/allshots),max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns,backward_shot_warns);
+	format(str,144,"Fired:%d Hits:%d HitPercentage:%.2f MaxContinousShots:%d Bullets OutOfRangeWarns:%d AimWarns:%d TeleportWarns:%d",allshots,hitshots,((hitshots*100.0)/allshots),max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns);
 	SendClientMessage(playerid,COLOR_GREEN,str);
 	return 1;
 }
