@@ -250,7 +250,19 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 	#if !defined BUSTAIM_DISABLE_PROFILING
 		BustAim_g_ShotsFired[playerid][weaponid-22]++;
 	#endif
-
+    if(   !(-1 < playerid < MAX_PLAYERS)
+       || !(21 < weaponid < 39)
+       || !(-1 < hittype < 5)
+       || !(-3000.0 < fX < 3000.0)
+       || !(-3000.0 < fY < 3000.0)
+       || !(-3000.0 < fZ < 3000.0)
+      )
+    #if defined BustAim_OnPlayerWeaponShot
+    	return BustAim_OnPlayerWeaponShot(playerid,weaponid,hittype,hitid,fX,fY,fZ);
+    #else
+	return 1;
+    #endif
+    
     if(hittype == BULLET_HIT_TYPE_PLAYER)
     {
     	#if !defined BUSTAIM_DISABLE_PROFILING
