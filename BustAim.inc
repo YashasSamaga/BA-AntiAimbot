@@ -465,7 +465,7 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 }
 public OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart)
 {
-    if((0 <= damageid < MAX_PLAYERS) && (0 <= weaponid < 50)) BustAim_g_IntrnlPlayerSettings{playerid} |= PREVIOUS_SHOT_DID_DAMAGE;
+    if((0 <= damagedid < MAX_PLAYERS) && (0 <= weaponid < 50)) BustAim_g_IntrnlPlayerSettings{playerid} |= PREVIOUS_SHOT_DID_DAMAGE;
 	#if defined BustAim_OnPlayerGiveDamage
 		return BustAim_OnPlayerGiveDamage(playerid, damagedid, Float: amount, weaponid, bodypart);
 	#else
