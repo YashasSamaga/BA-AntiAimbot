@@ -7,8 +7,10 @@
 #define BUSTAIM_MAX_PING 600
 #define BUSTAIM_MAX_PL_PERCENT_ALLOWED 5
 
-#include "..\include\BustAim.inc"
-#include "..\include\colors.inc"
+#include ".\include\BustAim.inc"
+////////////////////////////////////////////////////////////////////////////////
+const COLOUR_WHITE = 0xFFFFFFFF;
+const COLOUR_GREEN = 0x00FF00FF;
 ////////////////////////////////////////////////////////////////////////////////
 new Text:td;
 
@@ -65,31 +67,31 @@ main()
 {	
 	ConnectMessage1 = TextDrawCreate(480,290, " ");
 	TextDrawSetProportional(ConnectMessage1,1);
-	TextDrawColor(ConnectMessage1,COLOR_WHITE);
+	TextDrawColor(ConnectMessage1,COLOUR_WHITE);
 	TextDrawFont(ConnectMessage1,1);
 	TextDrawLetterSize(ConnectMessage1,0.169999, 1.199999);
 	TextDrawSetShadow(ConnectMessage1, 1);
 	ConnectMessage2 = TextDrawCreate(480,300, " ");
 	TextDrawSetProportional(ConnectMessage2,1);
-	TextDrawColor(ConnectMessage2,COLOR_WHITE);
+	TextDrawColor(ConnectMessage2,COLOUR_WHITE);
 	TextDrawFont(ConnectMessage2,1);
 	TextDrawLetterSize(ConnectMessage2, 0.169999, 1.199999);
 	TextDrawSetShadow(ConnectMessage2, 1);
 	ConnectMessage3 = TextDrawCreate(480,310, " ");
 	TextDrawSetProportional(ConnectMessage3,1);
-	TextDrawColor(ConnectMessage3,COLOR_WHITE);
+	TextDrawColor(ConnectMessage3,COLOUR_WHITE);
 	TextDrawFont(ConnectMessage3,1);
 	TextDrawLetterSize(ConnectMessage3, 0.169999, 1.199999);
 	TextDrawSetShadow(ConnectMessage3, 1);
 	ConnectMessage4 = TextDrawCreate(480,320, " ");
 	TextDrawSetProportional(ConnectMessage4,1);
-	TextDrawColor(ConnectMessage4,COLOR_WHITE);
+	TextDrawColor(ConnectMessage4,COLOUR_WHITE);
 	TextDrawFont(ConnectMessage4,1);
 	TextDrawLetterSize(ConnectMessage4,0.169999, 1.199999);
 	TextDrawSetShadow(ConnectMessage4, 1);
 	ConnectMessage5 = TextDrawCreate(480,330, " ");
 	TextDrawSetProportional(ConnectMessage5,1);
-	TextDrawColor(ConnectMessage5,COLOR_WHITE);
+	TextDrawColor(ConnectMessage5,COLOUR_WHITE);
 	TextDrawFont(ConnectMessage5,1);
 	TextDrawLetterSize(ConnectMessage5,0.169999, 1.199999);
 	TextDrawSetShadow(ConnectMessage5, 1);
@@ -219,14 +221,14 @@ COMMAND:profile(playerid,params[])
 	{
 	    return SendClientMessage(playerid, 0xFF0000AA, "Usage:/profile [PlayerID/Name]");
 	}
-    new allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns,backward_shot_warns;
+    new allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns;
     BustAim::GetPlayerProfile(id,allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns);
 	new str[144],name[MAX_PLAYER_NAME];
 	GetPlayerName(id,name,MAX_PLAYER_NAME);
 	format(str,144,"BustAim Profile of %s(%d):Complete Profile:Stats of all weapons",name,id);
-	SendClientMessage(playerid,COLOR_GREEN,str);
+	SendClientMessage(playerid,COLOUR_GREEN,str);
 	format(str,144,"Fired:%d Hits:%d HitPercentage:%.2f MaxContinousShots:%d Bullets OutOfRangeWarns:%d AimWarns:%d TeleportWarns:%d",allshots,hitshots,((hitshots*100.0)/allshots),max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns);
-	SendClientMessage(playerid,COLOR_GREEN,str);
+	SendClientMessage(playerid,COLOUR_GREEN,str);
 	return 1;
 }
 COMMAND:wprofile(playerid,params[])
@@ -236,21 +238,21 @@ COMMAND:wprofile(playerid,params[])
 	{
 	    return SendClientMessage(playerid, 0xFF0000AA, "Usage:/wprofile [PlayerID/Name] [WeaponID]");
 	}
-    new allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns,backward_shot_warns;
+    new allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns;
     BustAim::GetPlayerWeaponProfile(playerid,wid,allshots,hitshots,max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns);
 	new str[144],name[MAX_PLAYER_NAME],wname[32];
 	GetPlayerName(id,name,MAX_PLAYER_NAME);
 	GetWeaponName(wid,wname,32);
 	format(str,144,"BustAim Weapon Profile of %s(%d):Stats of Weapon %s(%d)",name,id,wname,wid);
-	SendClientMessage(playerid,COLOR_GREEN,str);
+	SendClientMessage(playerid,COLOUR_GREEN,str);
 	format(str,144,"Fired:%d Hits:%d HitPercentage:%.2f MaxContinousShots:%d Bullets OutOfRangeWarns:%d AimWarns:%d TeleportWarns:%d",allshots,hitshots,((hitshots*100.0)/allshots),max_cont_shots,out_of_range_warns,random_aim_warns,proaim_tele_warns);
-	SendClientMessage(playerid,COLOR_GREEN,str);
+	SendClientMessage(playerid,COLOUR_GREEN,str);
 	return 1;
 }
 COMMAND:reset(playerid,params[])
 {
     BustAim::ResetPlayerProfile(playerid);
-    SendClientMessage(playerid,COLOR_GREEN,"Your profile has been reset for all weapons");
+    SendClientMessage(playerid,COLOUR_GREEN,"Your profile has been reset for all weapons");
 	return 1;
 }
 COMMAND:wreset(playerid,params[])
@@ -261,7 +263,7 @@ COMMAND:wreset(playerid,params[])
 	    return SendClientMessage(playerid, 0xFF0000AA, "Usage:/wprofile [WeaponID]");
 	}
     BustAim::ResetPlayerWeaponProfile(playerid,tmp);
-    SendClientMessage(playerid,COLOR_GREEN,"Your weapon profile has been reset.");
+    SendClientMessage(playerid,COLOUR_GREEN,"Your weapon profile has been reset.");
 	return 1;
 }
 public OnPlayerDeath(playerid, killerid, reason)
