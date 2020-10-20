@@ -1,0 +1,14 @@
+{
+	"user": "YashasSamaga",
+	"repo": "BA-AntiAimbot",
+	"entry": "DemoGamemode.pwn",
+	"output": "DemoGamemode.amx",
+	"dependencies": [
+		"sampctl/samp-stdlib"
+	],
+	"dev_dependencies": [
+		"Southclaws/zcmd",
+		"Y-Less/sscanf:2.10.2-r2"
+	],
+	"include_path": "include"
+}
